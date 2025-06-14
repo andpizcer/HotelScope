@@ -97,7 +97,7 @@ export default function Home() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="inputType"
                   render={({ field }) => (
@@ -137,7 +137,7 @@ export default function Home() {
                       </div>
                     </FormItem>
                   )}
-                />
+                /> */}
                 <FormField
                   control={form.control}
                   name="hotelInput"

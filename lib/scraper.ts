@@ -18,10 +18,17 @@ export async function scrapeBookingReviews(url: string): Promise<Review[]> {
 
   await page.goto(url, { waitUntil: 'networkidle2' });
 
+  // Pulsar el botón "Leer todos los comentarios" si existe
+  const readAllReviewsButtonSelector = 'button[data-testid="fr-read-all-reviews"]';
+  const hasReadAllButton = await page.$(readAllReviewsButtonSelector);
+
+  if (hasReadAllButton) {
+    await page.click(readAllReviewsButtonSelector);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
   // Gestionar cookies
   const acceptButtonSelector = '#onetrust-accept-btn-handler';
-  const rejectButtonSelector = '#onetrust-reject-all-handler';
-
   const hasCookieBanner = await page.$(acceptButtonSelector);
 
   if (hasCookieBanner) {

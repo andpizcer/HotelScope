@@ -25,11 +25,10 @@ export function SdrStrategy({ hotelId }: SdrStrategyProps) {
           const data = await response.json()
           setSdrData(data)
         } else {
-          // If no SDR data exists yet, we'll generate it later
           setSdrData(null)
         }
       } catch (error) {
-        console.error("Error fetching SDR data:", error)
+        console.error("Error al obtener la estrategia SDR:", error)
       } finally {
         setIsLoading(false)
       }
@@ -48,19 +47,19 @@ export function SdrStrategy({ hotelId }: SdrStrategyProps) {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to generate SDR strategy")
+        throw new Error("No se pudo generar la estrategia SDR")
       }
 
       const data = await response.json()
       setSdrData(data)
       toast({
-        title: "SDR Strategy Generated",
-        description: "Successfully created a sales strategy based on review analysis",
+        title: "Estrategia SDR generada",
+        description: "Se ha creado correctamente una estrategia de ventas basada en el análisis de reseñas.",
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to generate SDR strategy. Please try again.",
+        description: "No se pudo generar la estrategia SDR. Por favor, inténtalo de nuevo.",
         variant: "destructive",
       })
       console.error(error)
@@ -73,18 +72,18 @@ export function SdrStrategy({ hotelId }: SdrStrategyProps) {
     if (!sdrData) return
 
     const content = `
-# SDR Strategy for ${sdrData.hotelName || "Hotel"}
+# Estrategia SDR para ${sdrData.hotelName || "Hotel"}
 
-## Sales Pitch
+## Argumento de venta
 ${sdrData.pitch}
 
-## Key Pain Points
+## Puntos de dolor clave
 ${sdrData.painPoints.map((point: string) => `- ${point}`).join("\n")}
 
-## Estimated Value Proposition
+## Propuesta de valor estimada
 ${sdrData.estimatedValue}
 
-## Recommendations
+## Recomendaciones
 ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
     `.trim()
 
@@ -92,7 +91,7 @@ ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `sdr-strategy-${hotelId}.txt`
+    a.download = `estrategia-sdr-${hotelId}.txt`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -111,21 +110,21 @@ ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Generate SDR Strategy</CardTitle>
-          <CardDescription>Create a sales development strategy based on review analysis</CardDescription>
+          <CardTitle>Generar estrategia SDR</CardTitle>
+          <CardDescription>Crea una estrategia de desarrollo de ventas basada en el análisis de reseñas</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">
-            No SDR strategy has been generated yet. Click the button below to create one using AI.
+            Aún no se ha generado una estrategia SDR. Haz clic en el botón de abajo para crear una usando IA.
           </p>
           <Button onClick={generateSdrStrategy} disabled={isGenerating}>
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
+                Generando...
               </>
             ) : (
-              "Generate SDR Strategy"
+              "Generar estrategia SDR"
             )}
           </Button>
         </CardContent>
@@ -139,12 +138,12 @@ ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>Sales Pitch</CardTitle>
-              <CardDescription>AI-generated pitch based on review analysis</CardDescription>
+              <CardTitle>Argumento de venta</CardTitle>
+              <CardDescription>Argumento generado por IA basado en el análisis de reseñas</CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={downloadSdrStrategy}>
               <Download className="h-4 w-4 mr-2" />
-              Download
+              Descargar
             </Button>
           </div>
         </CardHeader>
@@ -156,8 +155,8 @@ ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Key Pain Points</CardTitle>
-            <CardDescription>Issues identified from negative reviews</CardDescription>
+            <CardTitle>Puntos de dolor clave</CardTitle>
+            <CardDescription>Problemas identificados en las reseñas negativas</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -175,8 +174,8 @@ ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
 
         <Card>
           <CardHeader>
-            <CardTitle>Recommendations</CardTitle>
-            <CardDescription>Savvy solutions for identified issues</CardDescription>
+            <CardTitle>Recomendaciones</CardTitle>
+            <CardDescription>Soluciones inteligentes para los problemas identificados</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -195,8 +194,8 @@ ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
 
       <Card>
         <CardHeader>
-          <CardTitle>Estimated Value Proposition</CardTitle>
-          <CardDescription>Potential impact of implementing Savvy</CardDescription>
+          <CardTitle>Propuesta de valor estimada</CardTitle>
+          <CardDescription>Impacto potencial de implementar Savvy</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-lg font-medium">{sdrData.estimatedValue}</p>
@@ -206,10 +205,10 @@ ${sdrData.recommendations.map((rec: string) => `- ${rec}`).join("\n")}
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Regenerating...
+                Regenerando...
               </>
             ) : (
-              "Regenerate Strategy"
+              "Regenerar estrategia"
             )}
           </Button>
         </CardFooter>

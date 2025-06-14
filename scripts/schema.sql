@@ -7,7 +7,7 @@ USE savvy;
 -- Create hotels table
 CREATE TABLE IF NOT EXISTS hotels (
   id VARCHAR(36) PRIMARY KEY,
-  name TEXT NOT NULL,
+  name TEXT UNIQUE NOT NULL,
   url TEXT,
   total_reviews INT DEFAULT 0,
   negative_reviews INT DEFAULT 0,

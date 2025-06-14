@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
 
 export async function analyzeReviews(reviews: any[]) {
   try {
-    const negativeReviews = reviews.filter((review) => review.score <= 6.0)
+    const negativeReviews = reviews.filter((review) => review.score <= 5.0)
 
     if (negativeReviews.length === 0) {
       return {
@@ -83,7 +83,7 @@ export async function analyzeReviews(reviews: any[]) {
     // Análisis básico si falla la IA
     const issueCount: Record<string, number> = {}
 
-    const negativeReviews = reviews.filter((review) => review.score <= 6.0)
+    const negativeReviews = reviews.filter((review) => review.score <= 5.0)
 
     negativeReviews.forEach((review) => {
       const defaultIssue = "Insatisfacción general"
