@@ -29,7 +29,7 @@ export function Navbar() {
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <Hotel className="h-6 w-6 text-primary" />
-                        <span className="text-xl font-bold">Hotel Analytics for SAVVY</span>
+                        <span className="text-xl font-bold">HotelScope for SAVVY</span>
                     </div>
 
                     <div className="flex items-center space-x-1">
