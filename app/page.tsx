@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "@/hooks/use-toast"
 import { HotelDashboard } from "@/components/hotel-dashboard"
 import { SdrStrategy } from "@/components/sdr-strategy"
 
@@ -47,6 +47,21 @@ export default function Home() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
     try {
+      const hotels = await fetch("/api/hotels/listAll")
+      const hotelsData = await hotels.json()
+      console.log("Hoteles existentes:", hotelsData.hotels)
+      for (let hotel of hotelsData.hotels) {
+        if (hotel.name === values.hotelInput || hotel.url === values.hotelInput) {
+          toast({
+            title: "Error",
+            description: "El hotel ya ha sido analizado previamente.",
+            variant: "destructive",
+          })
+          setIsLoading(false)
+          return
+        }
+      }
+
       const response = await fetch("/api/hotels/analyze", {
         method: "POST",
         headers: {
