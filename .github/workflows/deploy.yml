@@ -13,6 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+            #Generar el archivo .env para el frontend
+      - name: Generate .env for frontend
+        run: |
+          cd frontend
+          cp .env.production.example .env
+
       #Configurar autenticación en Google Cloud
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
@@ -28,7 +34,7 @@ jobs:
       #Instalar dependencias
       - name: Install dependencies
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build
 
       #Desplegar a Google App Engine
