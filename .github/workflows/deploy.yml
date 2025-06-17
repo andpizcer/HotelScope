@@ -16,7 +16,6 @@ jobs:
             #Generar el archivo .env para el frontend
       - name: Generate .env for frontend
         run: |
-          cd frontend
           cp .env.production.example .env
 
       #Configurar autenticación en Google Cloud

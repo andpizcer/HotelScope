@@ -2,12 +2,12 @@
 CREATE DATABASE IF NOT EXISTS savvy;
 
 -- Use the database
-USE savvy;
+USE savvyDB;
 
 -- Create hotels table
 CREATE TABLE IF NOT EXISTS hotels (
   id VARCHAR(36) PRIMARY KEY,
-  name TEXT UNIQUE NOT NULL,
+  name VARCHAR(255) UNIQUE NOT NULL,
   url TEXT,
   total_reviews INT DEFAULT 0,
   negative_reviews INT DEFAULT 0,
