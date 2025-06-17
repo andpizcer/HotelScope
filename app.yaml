@@ -1,4 +1,4 @@
-runtime: nodejs18
+runtime: nodejs20
 
 env_variables:
   MYSQL_DATABASE: savvyDB
