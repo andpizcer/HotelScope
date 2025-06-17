@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/hooks/use-toast"
 import { HotelDashboard } from "@/components/hotel-dashboard"
 import { SdrStrategy } from "@/components/sdr-strategy"
+import ScrapingSimulator from "@/components/scrapping-simulator"
 
 const formSchema = z.object({
   hotelInput: z
@@ -35,6 +36,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [hotelData, setHotelData] = useState(null)
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [numberOfPages, setNumberOfPages] = useState(0)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,6 +63,16 @@ export default function Home() {
           return
         }
       }
+
+      fetch(`/api/hotels/analyze?url=${encodeURIComponent(values.inputType === "url" ? values.hotelInput : "")}`)
+        .then(response => response.json())
+        .then(data => {
+          setNumberOfPages(data.numberOfPages)
+          console.log("lastPageNumber:", data.lastPageNumber);
+        })
+        .catch(error => {
+          console.error("Error:", error);
+        });
 
       const response = await fetch("/api/hotels/analyze", {
         method: "POST",
@@ -193,7 +205,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {hotelData && (
+        {hotelData ? (
           <Card className="w-full max-w-4xl">
             <CardHeader>
               <CardTitle>{hotelData.hotelName || "Análisis del Hotel"}</CardTitle>
@@ -217,7 +229,7 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">Última actualización: {new Date().toLocaleDateString()}</p>
             </CardFooter>
           </Card>
-        )}
+        ) : <ScrapingSimulator totalPages={numberOfPages} />}
       </div>
     </main>
   )

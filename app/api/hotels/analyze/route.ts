@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
 import { db } from "@/lib/db"
 import { analyzeReviews } from "@/lib/ai"
-import { scrapeBookingReviews } from "@/lib/scraper"
+import { scrapeBookingReviews, getLastPageNumber } from "@/lib/scraper"
 import { parse } from "path"
 
 function parseSpanishDate(dateStr: string): string {
@@ -31,6 +31,23 @@ function parseSpanishDate(dateStr: string): string {
   return `${year}-${month}-${day}`;
 }
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const url = searchParams.get("url");
+
+    if (!url) {
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    }
+
+    const lastPageNumber = await getLastPageNumber(url);
+
+    return NextResponse.json({ lastPageNumber });
+  } catch (error) {
+    console.error("Error getting last page number:", error);
+    return NextResponse.json({ error: "Failed to get last page number" }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
