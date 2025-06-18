@@ -2,7 +2,7 @@
 FROM node:18-slim
 
 # Set the working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
@@ -23,11 +23,11 @@ RUN ls -alh /usr/bin/google-chrome-stable && \
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
+# Install app dependencies including Puppeteer
 RUN npm install --legacy-peer-deps
 
-USER pptruser
-
-COPY --chown=pptruser:pptruser . .
+# Bundle app source code
+COPY . .
 
 RUN npm run build
 
