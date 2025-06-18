@@ -1,5 +1,5 @@
 # Imagen oficial de Node.js (mínimo Debian 12 para compatibilidad con Chromium ARM64 y x86_64)
-FROM node:18-slim
+FROM node:20-slim
 
 # Variables necesarias para Puppeteer y Chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true \
