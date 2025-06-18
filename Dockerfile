@@ -24,7 +24,7 @@ RUN ls -alh /usr/bin/google-chrome-stable && \
 COPY package*.json ./
 
 # Install app dependencies including Puppeteer
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Bundle app source code
 COPY . .
