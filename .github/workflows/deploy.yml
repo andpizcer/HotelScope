@@ -47,9 +47,9 @@ jobs:
             --platform managed \
             --region $REGION \
             --allow-unauthenticated \
-            --memory 8Gi \
-            --cpu 8 \
-            --concurrency 1 \
-            --max-instances 7 \
+            --memory 16Gi \
+            --cpu 16 \
+            --concurrency 2 \
+            --max-instances 10 \
             --add-cloudsql-instances $CLOUDSQL_INSTANCE \
             --env-vars-file env.yaml

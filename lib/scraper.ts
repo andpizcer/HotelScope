@@ -20,7 +20,6 @@ const launchBrowser = async () => {
       '--no-zygote', // Evita un proceso "zygote"
       '--disable-gpu', // Deshabilita la GPU (no hay en Cloud Run)
       '--no-first-run', // No ejecuta el asistente de primera ejecución
-      '--single-process', // Ejecuta todo en un solo proceso (reduce memoria, pero puede ser menos estable)
       '--disable-sync', // Deshabilita sincronización de navegador
       '--disable-background-networking', // Deshabilita red en segundo plano
       '--disable-background-timer-throttling', // Evita la limitación de temporizadores
@@ -49,7 +48,8 @@ const launchBrowser = async () => {
       '--window-size=1280,800' // Asegura un tamaño de ventana explícito
     ],
     // defaultViewport: { width: 1280, height: 800 }, // Esto puede ser redundante con --window-size
-    timeout: 60000 // Aumenta el timeout de lanzamiento a 60 segundos
+    timeout: 120000, // Timeout general de lanzamiento
+    protocolTimeout: 120000 // Timeout para el protocolo DevTools
   });
 
   const page = await browser.newPage();
