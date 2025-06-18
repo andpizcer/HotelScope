@@ -48,7 +48,7 @@ jobs:
             --region $REGION \
             --allow-unauthenticated \
             --memory 16Gi \
-            --cpu 16 \
+            --cpu 8 \
             --concurrency 2 \
             --max-instances 10 \
             --add-cloudsql-instances $CLOUDSQL_INSTANCE \
