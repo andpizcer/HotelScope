@@ -9,7 +9,7 @@ export default function ScrapingSimulator({ totalPages }: { totalPages: number }
     useEffect(() => {
         if (!isActive) return
         if (currentPage < totalPages) {
-            const timer = setTimeout(() => setCurrentPage(currentPage + 1), 2000) // 800ms por página
+            const timer = setTimeout(() => setCurrentPage(currentPage + 1), 4000) // 800ms por página
             return () => clearTimeout(timer)
         } else {
             setTimeout(() => setIsActive(false), 1200) // Oculta barra al terminar

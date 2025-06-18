@@ -13,23 +13,17 @@ export interface Review {
 
 export async function getLastPageNumber(url: string): Promise<string | null> {
   const browser = await puppeteer.launch({
-    headless: true, // obligatorio
+    headless: false, // obligatorio
     args: [
       '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-zygote',
-      '--single-process',
-      '--disable-software-rasterizer',
+      '--disable-setuid-sandbox'
     ],
   });
   const page = await browser.newPage();
   await page.setCacheEnabled(false)
 
   await page.goto(url, {
-    waitUntil: 'domcontentloaded',
-    timeout: 10000, // 10 segundos máximo
+    waitUntil: 'networkidle2', // Espera a que la red esté inactiva
   });
 
   // Pulsar el botón "Leer todos los comentarios" si existe
@@ -88,23 +82,17 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
 
 export async function scrapeBookingReviews(url: string): Promise<Review[]> {
   const browser = await puppeteer.launch({
-    headless: true, // obligatorio
+    headless: false, // obligatorio
     args: [
       '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-zygote',
-      '--single-process',
-      '--disable-software-rasterizer',
+      '--disable-setuid-sandbox'
     ],
   });
   const page = await browser.newPage();
   await page.setCacheEnabled(false)
 
   await page.goto(url, {
-    waitUntil: 'domcontentloaded',
-    timeout: 10000, // 10 segundos máximo
+    waitUntil: 'networkidle2', // Espera a que la red esté inactiva
   });
 
   // Pulsar el botón "Leer todos los comentarios" si existe
