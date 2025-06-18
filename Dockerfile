@@ -1,12 +1,11 @@
-# Imagen oficial de Node.js (mínimo Debian 12 para compatibilidad con Chromium ARM64 y x86_64)
+# Base oficial Node.js (Debian slim)
 FROM node:20-slim
 
-# Variables necesarias para Puppeteer y Chromium
-ENV PUPPETEER_SKIP_DOWNLOAD=true \
-    NODE_ENV=production \
+# Variables de entorno
+ENV NODE_ENV=production \
     PORT=8080
 
-# Instalar dependencias necesarias para Chromium
+# Instalar dependencias necesarias para Chromium + Chromium mismo
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     fonts-liberation \
@@ -26,22 +25,28 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     xdg-utils \
     wget \
+    chromium \
     --no-install-recommends && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Crear y usar directorio de app
+# Definir ruta de Chromium (necesario para Puppeteer)
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Crear directorio app y establecerlo
 WORKDIR /app
 
-# Copiar dependencias e instalar
+# Copiar package.json e instalar dependencias (sin ignorar peer deps)
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
-# Copiar el resto de los archivos
+# Copiar resto del código
 COPY . .
 
-# Build de la app (Next.js, etc.)
+# Construir la app (Next.js o la que sea)
 RUN npm run build
 
-# Exponer puerto y definir comando de inicio
+# Exponer puerto
 EXPOSE 8080
+
+# Comando para iniciar (debes usar flags en Puppeteer en tu código)
 CMD ["npm", "start"]
