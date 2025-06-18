@@ -23,7 +23,6 @@ const launchBrowser = async () => {
       '--disable-accelerated-2d-canvas',
       '--no-zygote',
       // '--single-process', // Puedes probar con y sin este. Quitarlo a veces da más estabilidad.
-      '--disable-gpu', // No hay GPU en Cloud Run
       '--no-first-run',
       '--disable-sync',
       '--disable-background-networking',
@@ -73,6 +72,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // --- Función mejorada para preparar la página (incluye intercepción de peticiones) ---
 const preparePage = async (page: Page, url: string) => {
   // Activar intercepción de peticiones para bloquear recursos no esenciales
+  // *** CAMBIO CLAVE: Mantenemos la intercepción activa, no la desactivamos al final ***
   await page.setRequestInterception(true);
   page.on('request', (request) => {
     // Bloquear imágenes, hojas de estilo, fuentes, medios y websockets para ahorrar recursos
@@ -84,22 +84,32 @@ const preparePage = async (page: Page, url: string) => {
   });
 
   // Aumentar el timeout de page.goto
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 }); // 'domcontentloaded' suele ser más rápido que 'networkidle2'
+  // *** Ajuste de timeout a 120 segundos para page.goto ***
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 }); // 'domcontentloaded' suele ser más rápido que 'networkidle2'
 
   const acceptSelector = '#onetrust-accept-btn-handler';
   if (await page.$(acceptSelector)) {
+    console.log('Botón de aceptación de cookies encontrado, haciendo clic...');
     await page.click(acceptSelector);
-    await delay(1000);
+    await delay(2000); // Pequeño delay después de hacer clic
+  } else {
+    console.log('Botón de aceptación de cookies no encontrado.');
   }
+
 
   const readAllSelector = 'button[data-testid="fr-read-all-reviews"]';
-  if (await page.$(readAllSelector)) {
+  // *** Espera explícita para el botón "Leer todas las reseñas" antes de intentar el clic ***
+  try {
+    await page.waitForSelector(readAllSelector, { timeout: 10000 }); // Espera hasta 10 segundos
+    console.log('Botón "Leer todas las reseñas" encontrado, haciendo clic...');
     await page.click(readAllSelector);
-    await delay(1000);
+    await delay(2000); // Pequeño delay después de hacer clic
+  } catch (error) {
+    console.log('Botón "Leer todas las reseñas" no encontrado o no visible.', (error as Error).message);
   }
 
-  // Desactivar intercepción de peticiones si no se necesita después de la carga inicial
-  await page.setRequestInterception(false);
+  // *** ELIMINADO: Ya no desactivamos la intercepción aquí. Se mantiene activa. ***
+  // await page.setRequestInterception(false);
 };
 
 // --- Funciones de scraping actualizadas para usar launchBrowser y preparePage ---
@@ -111,7 +121,8 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
 
     const navSelector = 'div[role="navigation"] ol';
     // Aumentar el timeout para waitForSelector
-    await page.waitForSelector(navSelector, { timeout: 30000 }).catch(e => {
+    // *** Timeout para el selector de navegación a 60 segundos ***
+    await page.waitForSelector(navSelector, { timeout: 60000 }).catch(e => {
       console.error("Selector de navegación no encontrado (timeout):", e.message);
       throw e; // Relanza el error para que sea capturado en el catch principal
     });
@@ -146,8 +157,12 @@ export async function scrapeBookingReviews(url: string): Promise<Review[]> {
   const { browser, page } = await launchBrowser(); // Usa la función centralizada
   try {
     await preparePage(page, url);
-    // Aumentar el timeout para waitForSelector
-    await page.waitForSelector('[data-testid="review-card"]', { timeout: 60000 });
+
+    // Aumentar el timeout para waitForSelector de las tarjetas de reseña
+    // *** Timeout para review-card a 90 segundos ***
+    console.log('Esperando el selector de tarjetas de reseña...');
+    await page.waitForSelector('[data-testid="review-card"]', { timeout: 90000 });
+    console.log('Selector de tarjetas de reseña encontrado.');
 
     let reviews: Review[] = [];
     let hasNext = true;
@@ -176,15 +191,21 @@ export async function scrapeBookingReviews(url: string): Promise<Review[]> {
       });
 
       reviews = reviews.concat(pageReviews);
+      console.log(`Scraped ${pageReviews.length} reviews from current page. Total: ${reviews.length}`);
+
 
       const nextButton = await page.$('button[aria-label="Página siguiente"]:not([disabled])');
       if (nextButton) {
+        console.log('Botón "Página siguiente" encontrado, haciendo clic...');
         await nextButton.click();
-        await delay(2000);
+        await delay(3000); // Aumentado el delay para dar más tiempo a la carga de la siguiente página
         // Aumentar el timeout para waitForSelector en el bucle de paginación
-        await page.waitForSelector('[data-testid="review-card"]', { timeout: 30000 });
+        // *** Timeout para review-card en paginación a 60 segundos ***
+        await page.waitForSelector('[data-testid="review-card"]', { timeout: 60000 });
+        console.log('Siguiente página cargada y selector de reseñas encontrado.');
       } else {
         hasNext = false;
+        console.log('No hay más páginas de reseñas.');
       }
     }
 
@@ -193,6 +214,10 @@ export async function scrapeBookingReviews(url: string): Promise<Review[]> {
     console.error('Error scraping reviews:', err.message);
     return [];
   } finally {
-    await browser.close();
+    // *** Es crucial cerrar el navegador en el bloque finally para liberar recursos ***
+    if (browser) {
+      await browser.close();
+      console.log('Navegador Puppeteer cerrado.');
+    }
   }
 }
