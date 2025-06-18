@@ -23,13 +23,15 @@ RUN ls -alh /usr/bin/google-chrome-stable && \
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install app dependencies including Puppeteer
 RUN npm install --legacy-peer-deps
 
-# Bundle app source code
-COPY . .
+USER pptruser
 
-# Expose the port on which your app will run
+COPY --chown=pptruser:pptruser . .
+
+RUN npm run build
+
+ENV PORT=8080
 EXPOSE 8080
 
 CMD ["npx", "next", "start", "-p", "8080"]
