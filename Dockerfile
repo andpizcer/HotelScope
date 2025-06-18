@@ -1,27 +1,24 @@
-# Usa una imagen base ligera con Node.js
-FROM node:18-slim
-
-# Usa imagen oficial Puppeteer con Chromium y dependencias listas
+# Usa la imagen oficial de Puppeteer con Node.js y Chromium listos
 FROM ghcr.io/puppeteer/puppeteer:latest
 
 # Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia solo package.json y package-lock.json primero (para mejor caching)
+# Copia solo los archivos de dependencias para aprovechar cache
 COPY package*.json ./
 
-# Instala dependencias Node.js
+# Instala las dependencias (usa legacy-peer-deps si lo necesitas)
 RUN npm install --legacy-peer-deps
 
-# Copia el resto de tu app
+# Copia el resto del código de la aplicación
 COPY . .
 
-# Construye tu proyecto Next.js
+# Construye el proyecto Next.js
 RUN npm run build
 
-# Expone el puerto esperado por Cloud Run
+# Define el puerto que usa la app
 ENV PORT 8080
 EXPOSE 8080
 
-# Inicia la aplicación Next.js en modo producción
+# Comando para iniciar la aplicación en producción
 CMD ["npx", "next", "start", "-p", "8080"]
