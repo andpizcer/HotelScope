@@ -12,7 +12,18 @@ export interface Review {
 }
 
 export async function getLastPageNumber(url: string): Promise<string | null> {
-  const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  const browser = await puppeteer.launch({
+    headless: true, // obligatorio
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-zygote',
+      '--single-process',
+      '--disable-software-rasterizer',
+    ],
+  });
   const page = await browser.newPage();
   await page.setCacheEnabled(false)
 
@@ -73,7 +84,18 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
 }
 
 export async function scrapeBookingReviews(url: string): Promise<Review[]> {
-  const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  const browser = await puppeteer.launch({
+    headless: true, // obligatorio
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-zygote',
+      '--single-process',
+      '--disable-software-rasterizer',
+    ],
+  });
   const page = await browser.newPage();
   await page.setCacheEnabled(false)
 
