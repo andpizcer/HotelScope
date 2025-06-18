@@ -13,7 +13,7 @@ export interface Review {
 
 export async function getLastPageNumber(url: string): Promise<string | null> {
   const browser = await puppeteer.launch({
-    headless: false, // obligatorio
+    headless: true, // obligatorio
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox'
@@ -82,7 +82,7 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
 
 export async function scrapeBookingReviews(url: string): Promise<Review[]> {
   const browser = await puppeteer.launch({
-    headless: false, // obligatorio
+    headless: true, // obligatorio
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox'
