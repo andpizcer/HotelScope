@@ -1,8 +1,9 @@
+export const runtime = 'nodejs'; // 👈 Necesario para permitir puppeteer en Next.js
+
 import { NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
 import { db } from "@/lib/db"
 import { analyzeReviews } from "@/lib/ai"
-import { scrapeBookingReviews, getLastPageNumber } from "@/lib/scraper"
 import { parse } from "path"
 
 function parseSpanishDate(dateStr: string): string {
@@ -40,6 +41,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
+    const { getLastPageNumber } = await import('@/lib/scraper');
     const lastPageNumber = await getLastPageNumber(url);
 
     return NextResponse.json({ lastPageNumber });
@@ -62,6 +64,7 @@ export async function POST(request: Request) {
     const hotelId = uuidv4()
 
     // Reviews realizadas despues de scrapping
+    const { scrapeBookingReviews } = await import('@/lib/scraper');
     let reviews = await scrapeBookingReviews(url)
 
     // Analyze reviews using Gemini AI

@@ -36,7 +36,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [hotelData, setHotelData] = useState(null)
   const [activeTab, setActiveTab] = useState("dashboard")
-  const [numberOfPages, setNumberOfPages] = useState(0)
+  const [numberOfPages, setNumberOfPages] = useState(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,7 +52,7 @@ export default function Home() {
       const hotels = await fetch("/api/hotels/listAll")
       const hotelsData = await hotels.json()
       console.log("Hoteles existentes:", hotelsData.hotels)
-      for (let hotel of hotelsData.hotels) {
+      for (const hotel of hotelsData.hotels) {
         if (hotel.name === values.hotelInput || hotel.url === values.hotelInput) {
           toast({
             title: "Error",
@@ -64,16 +64,19 @@ export default function Home() {
         }
       }
 
-      fetch(`/api/hotels/analyze?url=${encodeURIComponent(values.inputType === "url" ? values.hotelInput : "")}`)
-        .then(response => response.json())
-        .then(data => {
-          setNumberOfPages(data.numberOfPages)
-          console.log("lastPageNumber:", data.lastPageNumber);
-        })
-        .catch(error => {
-          console.error("Error:", error);
-        });
+      // First, get the number of pages
+      try {
+        const pagesResponse = await fetch(
+          `/api/hotels/analyze?url=${encodeURIComponent(values.inputType === "url" ? values.hotelInput : "")}`,
+        )
+        const pagesData = await pagesResponse.json()
+        setNumberOfPages(pagesData.numberOfPages || pagesData.lastPageNumber || 0)
+        console.log("Number of pages:", pagesData.numberOfPages || pagesData.lastPageNumber)
+      } catch (error) {
+        console.error("Error getting number of pages:", error)
+      }
 
+      // Then proceed with the main analysis
       const response = await fetch("/api/hotels/analyze", {
         method: "POST",
         headers: {
@@ -104,6 +107,7 @@ export default function Home() {
       console.error(error)
     } finally {
       setIsLoading(false)
+      setNumberOfPages(null)
     }
   }
 
@@ -111,7 +115,9 @@ export default function Home() {
     <main className="container mx-auto py-10 px-4 md:px-6">
       <div className="flex flex-col items-center space-y-6 text-center">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Análisis Inteligente de Reseñas de Hoteles</h1>
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+            Análisis Inteligente de Reseñas de Hoteles
+          </h1>
           <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
             Identifica oportunidades de venta analizando reseñas negativas de hoteles
           </p>
@@ -119,7 +125,9 @@ export default function Home() {
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle>Analizar reseñas de hoteles</CardTitle>
-            <CardDescription>Ingrese una URL de Booking.com o el nombre del hotel para analizar reseñas negativas</CardDescription>
+            <CardDescription>
+              Ingrese una URL de Booking.com o el nombre del hotel para analizar reseñas negativas
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -190,22 +198,25 @@ export default function Home() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analizando...
-                    </>
-                  ) : (
-                    "Analizar reseñas"
-                  )}
-                </Button>
+                {numberOfPages === null && (
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Calculando tiempo de análisis...
+                      </>
+                    ) : (
+                      "Analizar reseñas"
+                    )}
+                  </Button>
+                )}
+                {numberOfPages && <ScrapingSimulator totalPages={numberOfPages} />}
               </form>
             </Form>
           </CardContent>
         </Card>
 
-        {hotelData ? (
+        {hotelData && (
           <Card className="w-full max-w-4xl">
             <CardHeader>
               <CardTitle>{hotelData.hotelName || "Análisis del Hotel"}</CardTitle>
@@ -229,7 +240,7 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">Última actualización: {new Date().toLocaleDateString()}</p>
             </CardFooter>
           </Card>
-        ) : <ScrapingSimulator totalPages={numberOfPages} />}
+        )}
       </div>
     </main>
   )
