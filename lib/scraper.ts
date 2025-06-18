@@ -16,7 +16,12 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
     headless: true, // obligatorio
     args: [
       '--no-sandbox',
-      '--disable-setuid-sandbox'
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-zygote',
+      '--single-process',
+      '--disable-gpu',
     ],
   });
   const page = await browser.newPage();
@@ -83,7 +88,12 @@ export async function scrapeBookingReviews(url: string): Promise<Review[]> {
     headless: true, // obligatorio
     args: [
       '--no-sandbox',
-      '--disable-setuid-sandbox'
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-zygote',
+      '--single-process',
+      '--disable-gpu',
     ],
   });
   const page = await browser.newPage();
