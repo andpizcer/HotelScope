@@ -13,13 +13,41 @@ const launchBrowser = async () => {
   const browser = await puppeteer.launch({
     headless: true,
     args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
+      '--no-sandbox', // Indispensable en entornos Docker/Cloud Run
+      '--disable-setuid-sandbox', // También indispensable
+      '--disable-dev-shm-usage', // Reduce el uso de /dev/shm, importante en contenedores con poca RAM
       '--disable-accelerated-2d-canvas',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu',
+      '--no-zygote', // Evita un proceso "zygote" que a veces causa problemas
+      '--single-process', // Ejecuta todo en un solo proceso (puede reducir sobrecarga, pero ten cuidado con la estabilidad)
+      '--disable-gpu', // Deshabilita el soporte de GPU
+      '--no-first-run', // No realiza el "first run wizard"
+      '--disable-sync', // Deshabilita la sincronización del navegador
+      '--disable-background-networking', // Deshabilita la red en segundo plano
+      '--disable-background-timer-throttling', // Evita la limitación de temporizadores en segundo plano
+      '--disable-backgrounding-occluded-windows', // No desactiva ventanas o pestañas ocultas
+      '--disable-breakpad', // Deshabilita el envío de informes de fallos
+      '--disable-client-side-phishing-detection', // Deshabilita la detección de phishing
+      '--disable-component-update', // Deshabilita la actualización de componentes
+      '--disable-default-apps', // Deshabilita las apps predeterminadas
+      '--disable-extensions', // Deshabilita extensiones
+      '--disable-features=TranslateUI,BlinkGenPropertyTrees', // Deshabilita características específicas de UI
+      '--disable-hang-monitor', // Deshabilita el monitor de cuelgues
+      '--disable-ipc-flooding-protection', // Deshabilita la protección contra inundaciones IPC
+      '--disable-popup-blocking', // Deshabilita el bloqueo de pop-ups
+      '--disable-prompt-on-repost', // Deshabilita el prompt de reenvío
+      '--disable-renderer-backgrounding', // No desactiva el renderizado en segundo plano
+      '--disable-site-isolation-trials', // Deshabilita las pruebas de aislamiento de sitios
+      '--disable-speech-api', // Deshabilita la API de voz
+      '--disable-web-security', // Puede ser útil para algunos casos de scraping, pero úsalo con precaución
+      '--enable-automation', // Habilita características para automatización
+      '--enable-features=NetworkService,NetworkServiceInProcess', // Habilita servicios de red
+      '--ignore-certificate-errors', // Ignora errores de certificado
+      '--metrics-recording-only', // Solo registra métricas, no las envía
+      '--no-default-browser-check', // No comprueba si es el navegador predeterminado
+      '--no-first-run', // No ejecuta el asistente de primera ejecución
+      '--safeBrowse-disable-auto-update', // Deshabilita la actualización automática de SafeBrowse
+      '--disable-logging', // Deshabilita el registro excesivo de Chromium
+      '--mute-audio' // Silencia el audio
     ],
     defaultViewport: { width: 1280, height: 800 },
   });
