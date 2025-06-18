@@ -1,44 +1,55 @@
-name: Deploy to Google App Engine
+name: Deploy to Cloud Run
 
 on:
   push:
     branches:
       - main
 
+env:
+  PROJECT_ID: ordinal-thinker-462919-t5
+  REGION: europe-west1
+  SERVICE_NAME: hotel-scope-app
+  IMAGE: gcr.io/ordinal-thinker-462919-t5/hotel-scope
+  CLOUDSQL_INSTANCE: ordinal-thinker-462919-t5:europe-west1:savvy-server
+
 jobs:
   deploy:
+    name: Build and Deploy to Cloud Run
     runs-on: ubuntu-latest
+
     steps:
-      #Checkout del código
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout source code
+        uses: actions/checkout@v3
 
-            #Generar el archivo .env para el frontend
-      - name: Generate .env for frontend
-        run: |
-          cp .env.production.example .env
-
-      #Configurar autenticación en Google Cloud
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      #Configurar Google Cloud SDK (con autenticación correcta)
       - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+        uses: google-github-actions/setup-gcloud@v2
 
-      #Instalar dependencias
-      - name: Install dependencies
+      - name: Configure Docker
+        run: gcloud auth configure-docker
+
+      - name: Build Docker image
         run: |
-          npm install --legacy-peer-deps
-          npm run build
+          docker build -t $IMAGE .
 
-      #Desplegar a Google App Engine
-      - name: Deploy to App Engine
+      - name: Push Docker image
         run: |
-          gcloud app deploy --quiet
+          docker push $IMAGE
 
-# TEST6
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image $IMAGE \
+            --platform managed \
+            --region $REGION \
+            --allow-unauthenticated \
+            --memory 2Gi \
+            --cpu 2 \
+            --concurrency 1 \
+            --max-instances 5 \
+            --add-cloudsql-instances $CLOUDSQL_INSTANCE \
+            --env-vars-file env.yaml
