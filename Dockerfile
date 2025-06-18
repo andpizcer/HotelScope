@@ -1,3 +1,6 @@
+# Usa una imagen base ligera con Node.js
+FROM node:18-slim
+
 # Usa imagen oficial Puppeteer con Chromium y dependencias listas
 FROM ghcr.io/puppeteer/puppeteer:latest
 
