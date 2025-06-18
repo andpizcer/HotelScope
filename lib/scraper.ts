@@ -1,6 +1,6 @@
 // Función exportable en TypeScript para scrapear reseñas de Booking.com desde una URL
 
-import puppeteer from 'puppeteer-extra';
+import puppeteer from 'puppeteer';
 
 export interface Review {
   title: string;
