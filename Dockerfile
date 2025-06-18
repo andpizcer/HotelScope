@@ -1,31 +1,35 @@
-FROM ghcr.io/puppeteer/puppeteer:latest
+# Use the official Node.js image as the base image
+FROM node:18-slim
 
-WORKDIR /app
+# Set the working directory
+WORKDIR /usr/src/app
 
-COPY package*.json ./
+# We don't need the standalone Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
-USER root
-
-# Instalar dependencias adicionales de Chromium/librerías básicas
-RUN apt-get update && apt-get install -y \
-    libnss3 \
-    libgconf-2-4 \
-    libasound2 \
-    libxss1 \
-    libgtk-3-0 \
-    libnotify4 \
-    --no-install-recommends && \
+# Install Google Chrome Stable and fonts
+# Note: this installs the necessary libs to make the browser work with Puppeteer.
+RUN apt-get update && apt-get install gnupg wget -y && \
+    wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
+    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+    apt-get update && \
+    apt-get install google-chrome-stable -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-RUN npm install --legacy-peer-deps
+# Verify that Chrome is installed at the expected location
+RUN ls -alh /usr/bin/google-chrome-stable && \
+    /usr/bin/google-chrome-stable --version
 
-USER pptruser
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
-COPY --chown=pptruser:pptruser . .
+# Install app dependencies including Puppeteer
+RUN npm install
 
-RUN npm run build
+# Bundle app source code
+COPY . .
 
-ENV PORT=8080
+# Expose the port on which your app will run
 EXPOSE 8080
 
 CMD ["npx", "next", "start", "-p", "8080"]
