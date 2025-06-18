@@ -1,4 +1,6 @@
-import puppeteer, { Page } from 'puppeteer';
+// Función exportable en TypeScript para scrapear reseñas de Booking.com desde una URL
+
+import puppeteer, { Page } from 'puppeteer'; // Importa Page para tipado si es necesario
 
 export interface Review {
   title: string;
@@ -9,53 +11,56 @@ export interface Review {
   nationality: string;
 }
 
+// --- Función centralizada para lanzar el navegador con configuración de Cloud Run ---
 const launchBrowser = async () => {
   const browser = await puppeteer.launch({
-    headless: true, // Siempre true en Cloud Run
+    headless: true, // ¡ESTO DEBE SER TRUE EN CLOUD RUN!
+    executablePath: '/usr/bin/google-chrome-stable', // Ruta donde instalaste Chrome en el Dockerfile
     args: [
-      '--no-sandbox', // Indispensable en contenedores sin privilegios
-      '--disable-setuid-sandbox', // Indispensable
-      '--disable-dev-shm-usage', // MUY IMPORTANTE: usa disco en lugar de memoria compartida para temporales
-      '--disable-accelerated-2d-canvas', // Deshabilita renderizado 2D acelerado
-      '--no-zygote', // Evita un proceso "zygote"
-      '--disable-gpu', // Deshabilita la GPU (no hay en Cloud Run)
-      '--no-first-run', // No ejecuta el asistente de primera ejecución
-      '--disable-sync', // Deshabilita sincronización de navegador
-      '--disable-background-networking', // Deshabilita red en segundo plano
-      '--disable-background-timer-throttling', // Evita la limitación de temporizadores
-      '--disable-breakpad', // Deshabilita el envío de informes de fallos
-      '--disable-client-side-phishing-detection', // Deshabilita detección de phishing
-      '--disable-component-update', // Deshabilita actualizaciones de componentes
-      '--disable-default-apps', // Deshabilita apps predeterminadas
-      '--disable-extensions', // Deshabilita extensiones
-      '--disable-features=TranslateUI,BlinkGenPropertyTrees,IndividualMarkers,ReportCriticalImages,AutomationControlled', // Deshabilita más características de UI/internas
-      '--disable-hang-monitor', // Deshabilita el monitor de cuelgues
-      '--disable-ipc-flooding-protection', // Deshabilita protección contra inundaciones IPC
-      '--disable-popup-blocking', // Deshabilita bloqueo de pop-ups
-      '--disable-prompt-on-repost', // Deshabilita el prompt de reenvío
-      '--disable-renderer-backgrounding', // No desactiva el renderizado en segundo plano
-      '--disable-site-isolation-trials', // Deshabilita pruebas de aislamiento de sitios
-      '--disable-speech-api', // Deshabilita la API de voz
-      // '--disable-web-security', // Útil en algunos casos, pero con cautela. No siempre necesario.
-      '--enable-automation', // Habilita características para automatización
-      '--enable-features=NetworkService,NetworkServiceInProcess', // Habilita servicios de red
-      '--ignore-certificate-errors', // Ignora errores de certificado
-      '--metrics-recording-only', // Solo registra métricas, no las envía
-      '--no-default-browser-check', // No comprueba si es el navegador predeterminado
-      '--safeBrowse-disable-auto-update', // Deshabilita actualización automática de SafeBrowse
-      '--disable-logging', // Deshabilita el registro excesivo de Chromium
-      '--mute-audio', // Silencia el audio
-      '--window-size=1280,800' // Asegura un tamaño de ventana explícito
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage', // Muy importante para reducir RAM en contenedores
+      '--disable-accelerated-2d-canvas',
+      '--no-zygote',
+      // '--single-process', // Puedes probar con y sin este. Quitarlo a veces da más estabilidad.
+      '--disable-gpu', // No hay GPU en Cloud Run
+      '--no-first-run',
+      '--disable-sync',
+      '--disable-background-networking',
+      '--disable-background-timer-throttling',
+      '--disable-breakpad',
+      '--disable-client-side-phishing-detection',
+      '--disable-component-update',
+      '--disable-default-apps',
+      '--disable-extensions',
+      '--disable-features=TranslateUI,BlinkGenPropertyTrees,IndividualMarkers,ReportCriticalImages,AutomationControlled',
+      '--disable-hang-monitor',
+      '--disable-ipc-flooding-protection',
+      '--disable-popup-blocking',
+      '--disable-prompt-on-repost',
+      '--disable-renderer-backgrounding',
+      '--disable-site-isolation-trials',
+      '--disable-speech-api',
+      '--enable-automation',
+      '--enable-features=NetworkService,NetworkServiceInProcess',
+      '--ignore-certificate-errors',
+      '--metrics-recording-only',
+      '--no-default-browser-check',
+      '--safeBrowse-disable-auto-update',
+      '--disable-logging',
+      '--mute-audio',
+      '--window-size=1280,800' // Tamaño explícito de la ventana
     ],
-    // defaultViewport: { width: 1280, height: 800 }, // Esto puede ser redundante con --window-size
-    timeout: 120000, // Timeout general de lanzamiento
-    protocolTimeout: 120000 // Timeout para el protocolo DevTools
+    ignoreHTTPSErrors: true, // Ignora errores HTTPS
+    timeout: 120000, // Timeout para el lanzamiento del navegador (2 minutos)
+    protocolTimeout: 120000 // Timeout para la comunicación del protocolo DevTools (2 minutos)
   });
 
   const page = await browser.newPage();
   await page.setCacheEnabled(false);
-  await page.setViewport({ width: 1280, height: 800 }); // Asegura el viewport en la página también
+  await page.setViewport({ width: 1280, height: 800 }); // Asegura el viewport de la página
 
+  // --- Manejadores de errores de Puppeteer ---
   page.on('error', err => console.error('Puppeteer page error:', err));
   page.on('pageerror', err => console.error('Puppeteer page script error:', err));
   browser.on('disconnected', () => console.error('Puppeteer browser disconnected'));
@@ -65,8 +70,21 @@ const launchBrowser = async () => {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// --- Función mejorada para preparar la página (incluye intercepción de peticiones) ---
 const preparePage = async (page: Page, url: string) => {
-  await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+  // Activar intercepción de peticiones para bloquear recursos no esenciales
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    // Bloquear imágenes, hojas de estilo, fuentes, medios y websockets para ahorrar recursos
+    if (['image', 'stylesheet', 'font', 'media', 'websocket'].indexOf(request.resourceType()) !== -1) {
+      request.abort();
+    } else {
+      request.continue();
+    }
+  });
+
+  // Aumentar el timeout de page.goto
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 }); // 'domcontentloaded' suele ser más rápido que 'networkidle2'
 
   const acceptSelector = '#onetrust-accept-btn-handler';
   if (await page.$(acceptSelector)) {
@@ -79,30 +97,45 @@ const preparePage = async (page: Page, url: string) => {
     await page.click(readAllSelector);
     await delay(1000);
   }
+
+  // Desactivar intercepción de peticiones si no se necesita después de la carga inicial
+  await page.setRequestInterception(false);
 };
 
-export async function getLastPageNumber(url: string): Promise<string | null> {
-  const { browser, page } = await launchBrowser();
+// --- Funciones de scraping actualizadas para usar launchBrowser y preparePage ---
 
+export async function getLastPageNumber(url: string): Promise<string | null> {
+  const { browser, page } = await launchBrowser(); // Usa la función centralizada
   try {
     await preparePage(page, url);
 
     const navSelector = 'div[role="navigation"] ol';
-    await page.waitForSelector(navSelector, { timeout: 5000 });
+    // Aumentar el timeout para waitForSelector
+    await page.waitForSelector(navSelector, { timeout: 30000 }).catch(e => {
+      console.error("Selector de navegación no encontrado (timeout):", e.message);
+      throw e; // Relanza el error para que sea capturado en el catch principal
+    });
 
     const lastPageNumber = await page.evaluate(() => {
       const pageItems = Array.from(document.querySelectorAll('div[role="navigation"] ol li'));
-      const visible = pageItems.filter(item => {
+      const visiblePageItems = pageItems.filter(item => {
         const button = item.querySelector('button');
-        return button && (!item.hasAttribute('aria-hidden') || item.getAttribute('aria-hidden') === 'false');
+        return (button && (!item.hasAttribute('aria-hidden') || item.getAttribute('aria-hidden') === 'false'));
       });
-      const last = visible[visible.length - 1];
-      return last?.querySelector('button')?.textContent?.trim() || null;
+      const lastVisiblePageItem = visiblePageItems[visiblePageItems.length - 1];
+
+      if (lastVisiblePageItem) {
+        const button = lastVisiblePageItem.querySelector('button');
+        if (button) {
+          return button.textContent?.trim() || null;
+        }
+      }
+      return null;
     });
 
     return lastPageNumber;
   } catch (err: any) {
-    console.error("Error getting last page number:", err.message);
+    console.error("Error en getLastPageNumber:", err.message);
     return null;
   } finally {
     await browser.close();
@@ -110,11 +143,11 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
 }
 
 export async function scrapeBookingReviews(url: string): Promise<Review[]> {
-  const { browser, page } = await launchBrowser();
-
+  const { browser, page } = await launchBrowser(); // Usa la función centralizada
   try {
     await preparePage(page, url);
-    await page.waitForSelector('[data-testid="review-card"]', { timeout: 30000 });
+    // Aumentar el timeout para waitForSelector
+    await page.waitForSelector('[data-testid="review-card"]', { timeout: 60000 });
 
     let reviews: Review[] = [];
     let hasNext = true;
@@ -148,7 +181,8 @@ export async function scrapeBookingReviews(url: string): Promise<Review[]> {
       if (nextButton) {
         await nextButton.click();
         await delay(2000);
-        await page.waitForSelector('[data-testid="review-card"]', { timeout: 10000 });
+        // Aumentar el timeout para waitForSelector en el bucle de paginación
+        await page.waitForSelector('[data-testid="review-card"]', { timeout: 30000 });
       } else {
         hasNext = false;
       }
