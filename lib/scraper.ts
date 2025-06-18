@@ -27,7 +27,10 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
   const page = await browser.newPage();
   await page.setCacheEnabled(false)
 
-  await page.goto(url, { waitUntil: 'networkidle2' });
+  await page.goto(url, {
+    waitUntil: 'domcontentloaded',
+    timeout: 10000, // 10 segundos máximo
+  });
 
   // Pulsar el botón "Leer todos los comentarios" si existe
   const readAllReviewsButtonSelector = 'button[data-testid="fr-read-all-reviews"]';
@@ -99,7 +102,10 @@ export async function scrapeBookingReviews(url: string): Promise<Review[]> {
   const page = await browser.newPage();
   await page.setCacheEnabled(false)
 
-  await page.goto(url, { waitUntil: 'networkidle2' });
+  await page.goto(url, {
+    waitUntil: 'domcontentloaded',
+    timeout: 10000, // 10 segundos máximo
+  });
 
   // Pulsar el botón "Leer todos los comentarios" si existe
   const readAllReviewsButtonSelector = 'button[data-testid="fr-read-all-reviews"]';
