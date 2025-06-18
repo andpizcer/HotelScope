@@ -11,49 +11,50 @@ export interface Review {
 
 const launchBrowser = async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: true, // Siempre true en Cloud Run
     args: [
-      '--no-sandbox', // Indispensable en entornos Docker/Cloud Run
-      '--disable-setuid-sandbox', // También indispensable
-      '--disable-dev-shm-usage', // Reduce el uso de /dev/shm, importante en contenedores con poca RAM
-      '--disable-accelerated-2d-canvas',
-      '--no-zygote', // Evita un proceso "zygote" que a veces causa problemas
-      '--single-process', // Ejecuta todo en un solo proceso (puede reducir sobrecarga, pero ten cuidado con la estabilidad)
-      '--disable-gpu', // Deshabilita el soporte de GPU
-      '--no-first-run', // No realiza el "first run wizard"
-      '--disable-sync', // Deshabilita la sincronización del navegador
-      '--disable-background-networking', // Deshabilita la red en segundo plano
-      '--disable-background-timer-throttling', // Evita la limitación de temporizadores en segundo plano
-      '--disable-backgrounding-occluded-windows', // No desactiva ventanas o pestañas ocultas
+      '--no-sandbox', // Indispensable en contenedores sin privilegios
+      '--disable-setuid-sandbox', // Indispensable
+      '--disable-dev-shm-usage', // MUY IMPORTANTE: usa disco en lugar de memoria compartida para temporales
+      '--disable-accelerated-2d-canvas', // Deshabilita renderizado 2D acelerado
+      '--no-zygote', // Evita un proceso "zygote"
+      '--disable-gpu', // Deshabilita la GPU (no hay en Cloud Run)
+      '--no-first-run', // No ejecuta el asistente de primera ejecución
+      '--single-process', // Ejecuta todo en un solo proceso (reduce memoria, pero puede ser menos estable)
+      '--disable-sync', // Deshabilita sincronización de navegador
+      '--disable-background-networking', // Deshabilita red en segundo plano
+      '--disable-background-timer-throttling', // Evita la limitación de temporizadores
       '--disable-breakpad', // Deshabilita el envío de informes de fallos
-      '--disable-client-side-phishing-detection', // Deshabilita la detección de phishing
-      '--disable-component-update', // Deshabilita la actualización de componentes
-      '--disable-default-apps', // Deshabilita las apps predeterminadas
+      '--disable-client-side-phishing-detection', // Deshabilita detección de phishing
+      '--disable-component-update', // Deshabilita actualizaciones de componentes
+      '--disable-default-apps', // Deshabilita apps predeterminadas
       '--disable-extensions', // Deshabilita extensiones
-      '--disable-features=TranslateUI,BlinkGenPropertyTrees', // Deshabilita características específicas de UI
+      '--disable-features=TranslateUI,BlinkGenPropertyTrees,IndividualMarkers,ReportCriticalImages,AutomationControlled', // Deshabilita más características de UI/internas
       '--disable-hang-monitor', // Deshabilita el monitor de cuelgues
-      '--disable-ipc-flooding-protection', // Deshabilita la protección contra inundaciones IPC
-      '--disable-popup-blocking', // Deshabilita el bloqueo de pop-ups
+      '--disable-ipc-flooding-protection', // Deshabilita protección contra inundaciones IPC
+      '--disable-popup-blocking', // Deshabilita bloqueo de pop-ups
       '--disable-prompt-on-repost', // Deshabilita el prompt de reenvío
       '--disable-renderer-backgrounding', // No desactiva el renderizado en segundo plano
-      '--disable-site-isolation-trials', // Deshabilita las pruebas de aislamiento de sitios
+      '--disable-site-isolation-trials', // Deshabilita pruebas de aislamiento de sitios
       '--disable-speech-api', // Deshabilita la API de voz
-      '--disable-web-security', // Puede ser útil para algunos casos de scraping, pero úsalo con precaución
+      // '--disable-web-security', // Útil en algunos casos, pero con cautela. No siempre necesario.
       '--enable-automation', // Habilita características para automatización
       '--enable-features=NetworkService,NetworkServiceInProcess', // Habilita servicios de red
       '--ignore-certificate-errors', // Ignora errores de certificado
       '--metrics-recording-only', // Solo registra métricas, no las envía
       '--no-default-browser-check', // No comprueba si es el navegador predeterminado
-      '--no-first-run', // No ejecuta el asistente de primera ejecución
-      '--safeBrowse-disable-auto-update', // Deshabilita la actualización automática de SafeBrowse
+      '--safeBrowse-disable-auto-update', // Deshabilita actualización automática de SafeBrowse
       '--disable-logging', // Deshabilita el registro excesivo de Chromium
-      '--mute-audio' // Silencia el audio
+      '--mute-audio', // Silencia el audio
+      '--window-size=1280,800' // Asegura un tamaño de ventana explícito
     ],
-    defaultViewport: { width: 1280, height: 800 },
+    // defaultViewport: { width: 1280, height: 800 }, // Esto puede ser redundante con --window-size
+    timeout: 60000 // Aumenta el timeout de lanzamiento a 60 segundos
   });
 
   const page = await browser.newPage();
   await page.setCacheEnabled(false);
+  await page.setViewport({ width: 1280, height: 800 }); // Asegura el viewport en la página también
 
   page.on('error', err => console.error('Puppeteer page error:', err));
   page.on('pageerror', err => console.error('Puppeteer page script error:', err));
