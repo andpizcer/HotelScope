@@ -3,7 +3,7 @@ name: Deploy to Cloud Run
 on:
   push:
     branches:
-      - main
+      - rama
 
 env:
   PROJECT_ID: ordinal-thinker-462919-t5
