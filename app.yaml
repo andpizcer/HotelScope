@@ -1,6 +1,0 @@
-runtime: nodejs20
-
-env_variables:
-  MYSQL_DATABASE: savvyDB
-  MYSQL_HOST: "/cloudsql/ordinal-thinker-462919-t5:europe-west1:savvy-server"
-  GEMINI_API_KEY: "AIzaSyAuG9Wm86XVO2upK3q8axEIy2N9u1zuW_E"
