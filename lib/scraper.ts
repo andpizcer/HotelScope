@@ -66,6 +66,7 @@ export async function getLastPageNumber(url: string): Promise<string | null> {
     }
     return null; // Retorna null si no se encuentra el número de la página
   });
+  browser.close();
 
   return lastPageNumber;
 }
